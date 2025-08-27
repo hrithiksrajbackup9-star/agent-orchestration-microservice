@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     aws_access_key_id: str = ""       # NEW
     aws_secret_access_key: str = ""   # NEW
     
+    # ERP Exception Management
+    mcp_abap_server_path: str = ""    # Path to SAP MCP server
+    erp_reports_directory: str = "erp_exception_reports"
+    
     # Redis
     redis_url: str = "redis://localhost:6379"  # NEW
     

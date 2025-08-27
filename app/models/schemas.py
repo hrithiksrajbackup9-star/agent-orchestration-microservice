@@ -29,6 +29,44 @@ class ExecutionStatus(str, Enum):
 
 
 # -------------------------------------------------------------------
+# ERP EXCEPTION MANAGEMENT SCHEMAS
+# -------------------------------------------------------------------
+class ERPExceptionCategory(str, Enum):
+    FINANCIAL = "FINANCIAL"
+    PROCUREMENT = "PROCUREMENT"
+    INVENTORY = "INVENTORY"
+    ORDER_FULFILLMENT = "ORDER_FULFILLMENT"
+    PRODUCTION = "PRODUCTION"
+    INVOICE_MATCHING = "INVOICE_MATCHING"
+    HR = "HR"
+    COMPLIANCE = "COMPLIANCE"
+    LOGISTICS = "LOGISTICS"
+    CUSTOMER_MANAGEMENT = "CUSTOMER_MANAGEMENT"
+    SYSTEM_DATA = "SYSTEM_DATA"
+    QUALITY_MANAGEMENT = "QUALITY_MANAGEMENT"
+    PROJECT_MANAGEMENT = "PROJECT_MANAGEMENT"
+    MAINTENANCE = "MAINTENANCE"
+
+
+class ERPExceptionSeverity(str, Enum):
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class ERPAnalysisRequest(BaseModel):
+    system_details: Optional[str] = None
+    analysis_type: str = "comprehensive"
+    focus_areas: List[ERPExceptionCategory] = []
+    async_execution: bool = True
+
+
+class ERPQuickAnalysisRequest(BaseModel):
+    query: str
+    focus_category: Optional[ERPExceptionCategory] = None
+
+
+# -------------------------------------------------------------------
 # CONFIGURATION MODELS
 # -------------------------------------------------------------------
 class MCPServerConfig(BaseModel):

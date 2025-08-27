@@ -7,7 +7,7 @@ import logging
 from app.config import settings
 from app.models.agent import AgentConfiguration
 from app.models.execution import AgentExecution
-from app.api import agents, executions, websocket
+from app.api import agents, executions, websocket, erp_agents
 from langfuse import Langfuse
 
 # Configure logging
@@ -59,6 +59,7 @@ app.add_middleware(
 # Include routers
 app.include_router(agents.router, prefix=f"/api/{settings.api_version}/agents", tags=["agents"])
 app.include_router(executions.router, prefix=f"/api/{settings.api_version}/executions", tags=["executions"])
+app.include_router(erp_agents.router, prefix=f"/api/{settings.api_version}/erp", tags=["erp-exceptions"])
 app.include_router(websocket.router, tags=["websocket"])
 
 @app.get("/health")

@@ -27,6 +27,8 @@ services:
     environment:
       - MONGODB_URL=mongodb://admin:password@mongodb:27017
       - REDIS_URL=redis://redis:6379
+      - MCP_ABAP_SERVER_PATH=/app/mcp-servers/sap-abap-adt/dist/index.js
+      - ERP_REPORTS_DIRECTORY=/app/reports
     env_file:
       - .env
     depends_on:
@@ -35,6 +37,8 @@ services:
     volumes:
       - ./app:/app
       - ./logs:/logs
+      - ./erp_exception_reports:/app/reports
+      - ./mcp-servers:/app/mcp-servers
 
 volumes:
   mongodb_data:

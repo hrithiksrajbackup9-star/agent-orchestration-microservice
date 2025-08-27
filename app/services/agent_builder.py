@@ -6,7 +6,7 @@ from strands.models import BedrockModel
 from strands_tools import current_time
 from strands.tools.mcp import MCPClient
 from mcp import stdio_client, StdioServerParameters
-from app.models.agent import ModelConfig, MCPServerConfig, ToolConfig
+from app.models.schemas import ModelConfig, MCPServerConfig, ToolConfig, ModelProvider, MCPServerType
 
 logger = logging.getLogger(__name__)
 

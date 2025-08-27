@@ -11,7 +11,7 @@ class AgentConfiguration(Document):
     name: str
     description: Optional[str] = None
     system_prompt: str
-    agent_model_config: ModelConfig
+    model_config: ModelConfig
     mcp_servers: List[MCPServerConfig] = []
     tools: List[ToolConfig] = []
     builtin_tools: List[str] = []
