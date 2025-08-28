@@ -7,7 +7,9 @@ import logging
 from app.config import settings
 from app.models.agent import AgentConfiguration
 from app.models.execution import AgentExecution
-from app.api import agents, executions, websocket, erp_agents
+from app.models.agent import AgentTemplate, SystemPromptTemplate, MCPServerRegistry, ToolRegistry
+from app.models.execution import ExecutionResult
+from app.api import agents, executions, websocket, erp_agents, dynamic_agents
 from langfuse import Langfuse
 
 # Configure logging
@@ -30,7 +32,10 @@ async def lifespan(app: FastAPI):
     client = AsyncIOMotorClient(settings.mongodb_url)
     await init_beanie(
         database=client[settings.database_name],
-        document_models=[AgentConfiguration, AgentExecution]
+        document_models=[
+            AgentConfiguration, AgentExecution, ExecutionResult,
+            AgentTemplate, SystemPromptTemplate, MCPServerRegistry, ToolRegistry
+        ]
     )
     logger.info("Service started successfully")
     
@@ -60,6 +65,7 @@ app.add_middleware(
 app.include_router(agents.router, prefix=f"/api/{settings.api_version}/agents", tags=["agents"])
 app.include_router(executions.router, prefix=f"/api/{settings.api_version}/executions", tags=["executions"])
 app.include_router(erp_agents.router, prefix=f"/api/{settings.api_version}/erp", tags=["erp-exceptions"])
+app.include_router(dynamic_agents.router, prefix=f"/api/{settings.api_version}/dynamic", tags=["dynamic-agents"])
 app.include_router(websocket.router, tags=["websocket"])
 
 @app.get("/health")

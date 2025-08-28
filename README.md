@@ -1,15 +1,18 @@
 # Agent Orchestration Service with ERP Exception Management
 
-A comprehensive microservice framework for AI agent orchestration with specialized ERP Exception Management capabilities.
+A comprehensive microservice framework for AI agent orchestration with database-driven configuration and specialized ERP Exception Management capabilities.
 
 ## Features
 
 ### Core Framework
+- **Database-Driven Configuration**: All agent configurations, prompts, and tools stored in MongoDB
+- **Template System**: Create agents from configurable templates with variable substitution
 - **Dynamic Agent Registration**: Register and manage AI agents with full configuration
 - **Execution Management**: Track and monitor agent executions with real-time updates
 - **WebSocket Support**: Real-time execution updates via WebSocket connections
 - **MCP Integration**: Model Context Protocol support for external tool integration
 - **Multiple Model Providers**: Support for Bedrock, OpenAI, Anthropic, and Perplexity
+- **Result Storage**: All execution results stored in database with structured metadata
 
 ### ERP Exception Management
 - **Comprehensive Analysis**: Full ERP exception detection across all business processes
@@ -54,48 +57,143 @@ python -m app.main
 ### 3. Register ERP Agent
 
 ```bash
-# Register the ERP Exception Management Agent
-python scripts/register_erp_agent.py
+# Setup ERP templates and registry (one-time setup)
+python scripts/setup_erp_templates.py
 ```
 
-### 4. Use the ERP Client
+### 4. Use the Dynamic ERP Client
 
 ```bash
-# Check service status
-python client/erp_client.py status
+# List available templates
+python client/dynamic_erp_client.py templates
 
-# Start comprehensive analysis
-python client/erp_client.py analyze --wait
+# Execute the ERP agent (async)
+python client/dynamic_erp_client.py execute erp-exception-management-001 --wait
 
-# Quick analysis
-python client/erp_client.py quick "analyze financial exceptions"
+# Execute with custom variables
+python client/dynamic_erp_client.py execute erp-exception-management-001 \
+  --variables '{"system_name": "SAP Production", "focus_areas": "Financial Exceptions"}' \
+  --wait
 
-# Get specific result
-python client/erp_client.py result <execution_id>
+# Check execution status
+python client/dynamic_erp_client.py status <execution_id>
+
+# Get execution result
+python client/dynamic_erp_client.py result <execution_id>
+
+# List recent executions
+python client/dynamic_erp_client.py list --limit 5
 ```
 
 ## API Endpoints
 
-### Core Agent Management
-- `POST /api/v1/agents/register` - Register new agent
-- `GET /api/v1/agents/{agent_id}/config` - Get agent configuration
-- `PUT /api/v1/agents/{agent_id}/config` - Update agent configuration
-- `POST /api/v1/agents/{agent_id}/execute` - Execute agent
-- `GET /api/v1/agents/` - List all agents
+### Dynamic Agent Management
+- `POST /api/v1/dynamic/execute/{agent_id}` - Execute agent by ID
+- `GET /api/v1/dynamic/execution/{execution_id}/status` - Get execution status
+- `GET /api/v1/dynamic/execution/{execution_id}/result` - Get execution result
+- `GET /api/v1/dynamic/executions` - List executions
+- `POST /api/v1/dynamic/agents/from-template` - Create agent from template
+- `GET /api/v1/dynamic/templates` - List agent templates
+- `GET /api/v1/dynamic/templates/prompts` - List system prompt templates
+- `GET /api/v1/dynamic/registry/mcp-servers` - List MCP servers
+- `GET /api/v1/dynamic/registry/tools` - List available tools
 
-### ERP Exception Management
+### Legacy ERP Exception Management
 - `GET /api/v1/erp/status` - Get ERP service status
 - `POST /api/v1/erp/analyze` - Start comprehensive analysis
 - `GET /api/v1/erp/analyze/{execution_id}` - Get analysis result
 - `POST /api/v1/erp/quick-analysis` - Quick analysis
 
-### Execution Management
+### Legacy Execution Management
 - `GET /api/v1/executions/{execution_id}` - Get execution details
 - `GET /api/v1/executions/` - List executions
 - `DELETE /api/v1/executions/{execution_id}` - Cancel execution
 
 ### WebSocket
 - `WS /ws/execution/{execution_id}` - Real-time execution updates
+
+## Database-Driven Configuration
+
+### Agent Templates
+Create reusable agent configurations with variable substitution:
+
+```json
+{
+  "template_id": "erp-exception-management",
+  "name": "ERP Exception Management Agent",
+  "system_prompt_template": "erp-exception-management-prompt",
+  "default_model_config": {
+    "provider": "bedrock",
+    "model_id": "us.anthropic.claude-sonnet-4-20250514-v1:0"
+  },
+  "template_variables": {
+    "system_name": "SAP ERP",
+    "analysis_scope": "Comprehensive"
+  }
+}
+```
+
+### System Prompt Templates
+Create configurable prompts with Jinja2 templating:
+
+```jinja2
+You are analyzing {{system_name|default('ERP System')}}.
+Focus on {{focus_areas|default('all business processes')}}.
+Analysis scope: {{analysis_scope|default('comprehensive')}}.
+```
+
+### MCP Server Registry
+Centrally manage MCP server configurations:
+
+```json
+{
+  "server_id": "sap-abap-adt",
+  "name": "SAP ABAP ADT MCP Server",
+  "command": "node",
+  "possible_locations": [
+    "C:\\mcp-abap-abap-adt-api\\dist\\index.js",
+    "~/mcp-abap-abap-adt-api/dist/index.js"
+  ],
+  "auto_detect_enabled": true
+}
+```
+
+## Dynamic Execution Examples
+
+### Execute with Custom Variables
+```bash
+curl -X POST "http://localhost:8000/api/v1/dynamic/execute/erp-exception-management-001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_data": {
+      "prompt": "Analyze financial exceptions in SAP",
+      "system_details": "Production SAP System"
+    },
+    "variables": {
+      "system_name": "SAP Production",
+      "focus_areas": "Financial and Procurement Exceptions",
+      "analysis_depth": "Deep Analysis with Root Cause"
+    },
+    "async_execution": true
+  }'
+```
+
+### Create Agent from Template
+```bash
+curl -X POST "http://localhost:8000/api/v1/dynamic/agents/from-template" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "template_id": "erp-exception-management",
+    "agent_id": "erp-financial-specialist",
+    "variables": {
+      "system_name": "SAP Financial Module",
+      "focus_areas": "Financial Exceptions Only"
+    },
+    "overrides": {
+      "name": "ERP Financial Exception Specialist"
+    }
+  }'
+```
 
 ## ERP Exception Categories
 
@@ -160,6 +258,9 @@ AWS_SECRET_ACCESS_KEY=your_secret_key
 MCP_ABAP_SERVER_PATH=/path/to/mcp-abap-server/dist/index.js
 ERP_REPORTS_DIRECTORY=erp_exception_reports
 
+# Template System
+JINJA2_TEMPLATE_CACHE=true
+
 # Monitoring
 LANGFUSE_PUBLIC_KEY=your_public_key
 LANGFUSE_SECRET_KEY=your_secret_key
@@ -204,11 +305,12 @@ export PERPLEXITY_API_KEY=your_perplexity_api_key
                     └─────────────┬─────────────┘
                                  │
                     ┌─────────────┴─────────────┐
-                    │    Agent Services        │
+                    │  Database-Driven Services │
                     │  ┌─────────────────────┐  │
+                    │  │ Template Service    │  │
+                    │  │ Dynamic Agent Svc   │  │
                     │  │ ERP Exception Mgmt  │  │
-                    │  │ Dynamic Agent       │  │
-                    │  │ Builder             │  │
+                    │  │ Agent Builder       │  │
                     │  └─────────────────────┘  │
                     └─────────────┬─────────────┘
                                  │
@@ -216,20 +318,22 @@ export PERPLEXITY_API_KEY=your_perplexity_api_key
           │                      │                      │
     ┌─────┴─────┐         ┌─────┴─────┐         ┌─────┴─────┐
     │ MongoDB   │         │   MCP     │         │  External │
-    │ (Config & │         │ Servers   │         │   APIs    │
-    │ Execution)│         │ (SAP,     │         │(Perplexity│
-    └───────────┘         │Research)  │         │ etc.)     │
-                          └───────────┘         └───────────┘
+    │ • Configs │         │ Servers   │         │   APIs    │
+    │ • Templates│        │ (SAP,     │         │(Perplexity│
+    │ • Executions│       │Research)  │         │ etc.)     │
+    │ • Results │         │           │         │           │
+    └───────────┘         └───────────┘         └───────────┘
 ```
 
 ## Development
 
-### Adding New Agents
+### Adding New Agent Templates
 
-1. Create agent service in `app/services/`
-2. Add API endpoints in `app/api/`
-3. Register agent configuration
-4. Update routing in `app/main.py`
+1. Create system prompt template in database
+2. Create agent template referencing the prompt template
+3. Register MCP servers and tools in registry
+4. Create agent instances from templates
+5. Execute via REST API
 
 ### Testing
 
@@ -237,8 +341,8 @@ export PERPLEXITY_API_KEY=your_perplexity_api_key
 # Run tests
 pytest
 
-# Test specific ERP functionality
-python -m pytest tests/test_erp_agent.py
+# Test dynamic agent functionality
+python -m pytest tests/test_dynamic_agents.py
 
 # Integration tests
 python -m pytest tests/test_integration.py
@@ -249,9 +353,11 @@ python -m pytest tests/test_integration.py
 The service includes comprehensive monitoring:
 
 - **Langfuse Integration**: Trace all agent executions
-- **Execution Tracking**: Database storage of all runs
+- **Database Storage**: All executions and results stored in MongoDB
+- **Structured Results**: Results stored with metadata and metrics
 - **WebSocket Updates**: Real-time status updates
 - **Error Handling**: Comprehensive error tracking and recovery
+- **Template Versioning**: Track template changes and agent versions
 
 ## Production Deployment
 

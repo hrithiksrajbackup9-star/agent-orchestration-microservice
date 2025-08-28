@@ -25,3 +25,4 @@ pydantic-settings
 strands-agents
 strands-agents-tools
 mcp
+jinja2>=3.1.0
