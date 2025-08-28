@@ -2,9 +2,12 @@ from pydantic_settings import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
-    # MongoDB
+    # MongoDB - Master Database
     mongodb_url: str = "mongodb://localhost:27017"
-    database_name: str = "agent_orchestration"
+    master_database_name: str = "ktern-masterdb"
+    
+    # Project Database Pattern
+    project_database_prefix: str = "ktern-project-"
     
     # API
     api_version: str = "v1"
@@ -35,6 +38,10 @@ class Settings(BaseSettings):
     # Service
     environment: str = "development"
     log_level: str = "INFO"
+    
+    # Multi-tenant settings
+    enable_multi_tenant: bool = True
+    default_project_id: str = "default"
     
     class Config:
         env_file = ".env"
