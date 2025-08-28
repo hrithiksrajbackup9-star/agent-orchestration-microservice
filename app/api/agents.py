@@ -7,10 +7,14 @@ from typing import Dict, Any, List
 from datetime import datetime
 from app.models.agent import AgentConfiguration
 from app.models.schemas import ExecuteAgentRequest, AgentResponse
-from app.services.agent_builder import DynamicAgentBuilder
+from app.services.orchestrator import Orchestrator
+from bson import ObjectId
+from fastapi import HTTPException
+from beanie.odm.fields import PydanticObjectId
+
 
 router = APIRouter()
-orchestrator = DynamicAgentBuilder()
+orchestrator = Orchestrator()
 
 @router.post("/register", response_model=Dict[str, Any])
 async def register_agent(config: AgentConfiguration):
@@ -36,12 +40,29 @@ async def register_agent(config: AgentConfiguration):
 @router.get("/{agent_id}/config", response_model=Dict[str, Any])
 async def get_agent_config(agent_id: str):
     """Get agent configuration"""
+    query_id = ObjectId(agent_id) if ObjectId.is_valid(agent_id) else agent_id
+
     config = await AgentConfiguration.find_one(
-        AgentConfiguration.agent_id == agent_id
+        AgentConfiguration.agent_id == query_id
     )
     if not config:
         raise HTTPException(404, f"Agent {agent_id} not found")
-    return config.dict()
+
+    doc = normalize_mongo_ids(config.dict())
+    return doc
+
+
+
+def normalize_mongo_ids(data: dict) -> dict:
+    """Recursively convert ObjectId/PydanticObjectId to str."""
+    for key, value in data.items():
+        if isinstance(value, (ObjectId, PydanticObjectId)):
+            data[key] = str(value)
+        elif isinstance(value, list):
+            data[key] = [str(v) if isinstance(v, (ObjectId, PydanticObjectId)) else v for v in value]
+        elif isinstance(value, dict):
+            data[key] = normalize_mongo_ids(value)
+    return data
 
 @router.put("/{agent_id}/config", response_model=Dict[str, Any])
 async def update_agent_config(agent_id: str, updates: Dict[str, Any]):

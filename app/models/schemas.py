@@ -115,9 +115,6 @@ class AgentConfig(BaseModel):
 # -------------------------------------------------------------------
 # REQUEST / RESPONSE SCHEMAS
 # -------------------------------------------------------------------
-class ExecuteAgentRequest(BaseModel):
-    agent_id: str
-    params: Dict[str, Any] = {}
 
 
 class AgentResponse(BaseModel):
@@ -156,3 +153,44 @@ class WebSocketEvent(BaseModel):
     event: str
     execution_id: str
     payload: Union[ExecutionUpdate, Dict[str, Any]]
+
+
+# Additional schemas for request/response models
+from pydantic import BaseModel, Field, validator
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+
+class ExecuteAgentRequest(BaseModel):
+    agent_id: Optional[str] = None
+    input_data: Dict[str, Any]
+    system_prompt_override: Optional[str] = None
+    model_override: Optional[ModelConfig] = None
+    mcp_servers_override: Optional[List[MCPServerConfig]] = None
+    tools_override: Optional[List[ToolConfig]] = None
+    timeout_override: Optional[int] = None
+    async_execution: bool = False
+    stream_response: bool = False
+    include_trace: bool = True
+    metadata: Optional[Dict[str, Any]] = {}
+    
+    @validator('input_data')
+    def validate_input_data(cls, v):
+        if not v:
+            raise ValueError("input_data cannot be empty")
+        return v
+
+class AgentResponse(BaseModel):
+    execution_id: str
+    agent_id: str
+    status: str
+    output_data: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    duration_ms: Optional[int] = None
+    trace_url: Optional[str] = None
+
+class WorkflowRequest(BaseModel):
+    workflow_name: str
+    agent_sequence: List[str]
+    initial_input: Dict[str, Any]
+    parallel_execution: bool = False
+    metadata: Optional[Dict[str, Any]] = {}

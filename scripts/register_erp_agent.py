@@ -29,7 +29,7 @@ CRITICAL ERP EXCEPTION CATEGORIES TO DETECT:
 
 Focus on providing actionable, research-backed insights that can be immediately implemented by ERP administrators and business users.""",
         
-        "model_config": {
+        "agent_model_config": {
             "provider": "bedrock",
             "model_id": "us.anthropic.claude-sonnet-4-20250514-v1:0",
             "temperature": 0.7,
