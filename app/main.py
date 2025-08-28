@@ -7,9 +7,17 @@ import logging
 from app.config import settings
 from app.models.agent import AgentConfiguration
 from app.models.execution import AgentExecution
-from app.models.agent import AgentTemplate, SystemPromptTemplate, MCPServerRegistry, ToolRegistry
 from app.models.execution import ExecutionResult
-from app.api import agents, executions, websocket, erp_agents, dynamic_agents
+from app.models.master import (
+    KTMAgents, KTMTools, KTMMCPs, KTMSystemPrompts, 
+    KTMProjects, KTMModelConfigs
+)
+from app.models.project import (
+    KTPAgentInstances, KTPExecutions, KTPResults, 
+    KTPTokenUsage, KTPAuditLog
+)
+from app.api import agents, executions, websocket, erp_agents, dynamic_agents, master_data, project_data
+from app.services.database_manager import db_manager
 from langfuse import Langfuse
 
 # Configure logging
@@ -29,20 +37,13 @@ langfuse = Langfuse(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    client = AsyncIOMotorClient(settings.mongodb_url)
-    await init_beanie(
-        database=client[settings.database_name],
-        document_models=[
-            AgentConfiguration, AgentExecution, ExecutionResult,
-            AgentTemplate, SystemPromptTemplate, MCPServerRegistry, ToolRegistry
-        ]
-    )
+    await db_manager.initialize()
     logger.info("Service started successfully")
     
     yield
     
     # Shutdown
-    client.close()
+    await db_manager.close()
     await langfuse.flush()
     logger.info("Service shutdown complete")
 
@@ -66,6 +67,8 @@ app.include_router(agents.router, prefix=f"/api/{settings.api_version}/agents", 
 app.include_router(executions.router, prefix=f"/api/{settings.api_version}/executions", tags=["executions"])
 app.include_router(erp_agents.router, prefix=f"/api/{settings.api_version}/erp", tags=["erp-exceptions"])
 app.include_router(dynamic_agents.router, prefix=f"/api/{settings.api_version}/dynamic", tags=["dynamic-agents"])
+app.include_router(master_data.router, prefix=f"/api/{settings.api_version}/master", tags=["master-data"])
+app.include_router(project_data.router, prefix=f"/api/{settings.api_version}", tags=["project-data"])
 app.include_router(websocket.router, tags=["websocket"])
 
 @app.get("/health")
